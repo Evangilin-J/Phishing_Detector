@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI URL Security Analyzer</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0f1d;
+            --card-bg: rgba(18, 26, 47, 0.85);
+            --primary-glow: #00f2fe;
+            --accent-blue: #4facfe;
+            --danger-glow: #ff0055;
+            --danger-bg: rgba(255, 0, 85, 0.15);
+            --safe-glow: #00ff87;
+            --safe-bg: rgba(0, 255, 135, 0.15);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top left, #1a2639, var(--bg-dark));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Glassmorphic Container */
+        .container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        0 0 30px rgba(0, 242, 254, 0.08);
+        }
+
+        /* Header Styling */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-glow), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Form Elements */
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            background: rgba(10, 15, 29, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Action Button */
+        button[type="submit"] {
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #050b14;
+            font-weight: 800;
+            font-size: 16px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.35);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.6);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* SVG Icon Helpers */
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Result Cards */
+        .result-box {
+            margin-top: 30px;
+            padding: 24px;
+            border-radius: 16px;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        .result-box.malicious {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-glow);
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.25);
+        }
+
+        .result-box.malicious h3 {
+            color: var(--danger-glow);
+        }
+
+        .result-box.safe {
+            background: var(--safe-bg);
+            border: 1px solid var(--safe-glow);
+            box-shadow: 0 0 25px rgba(0, 255, 135, 0.25);
+        }
+
+        .result-box.safe h3 {
+            color: var(--safe-glow);
+        }
+
+        .result-box h3 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-info {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .input-preview {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-all;
+            display: inline-block;
+            margin-top: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom History Button & Section Styles */
+        .history-btn {
+            background: transparent;
+            border: 1px solid var(--primary-glow);
+            color: var(--primary-glow);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .history-btn:hover {
+            background: rgba(0, 242, 254, 0.1);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+        .history-container {
+            margin-top: 15px;
+            background: rgba(10, 15, 29, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .table-custom {
+            color: var(--text-main);
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+        }
+        .table-custom th {
+            color: var(--primary-glow);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 8px;
+            text-align: left;
+        }
+        .table-custom td {
+            padding: 10px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            word-break: break-all;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>
+                <svg class="icon" viewBox="0 0 24 24" style="fill: var(--primary-glow); width: 28px; height: 28px;">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8subscriptionz"/>
+                </svg>
+                AI URL Security Analyzer
+            </h2>
+            <p>Real-time Neural Threat & Phishing Analysis</p>
+        </div>
+
+        <form method="POST">
+            <label for="user_input">
+                <svg class="icon" viewBox="0 0 24 24" style="fill: var(--primary-glow);">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/>
+                </svg>
+                Target URL or Payload Content:
+            </label>
+            
+            <textarea name="user_input" id="user_input" placeholder="Paste suspicious URL (e.g., http://login-secure-update.com) or email body text here..." required></textarea>
+
+            <button type="submit">
+                <svg class="icon" viewBox="0 0 24 24" style="fill: currentColor;">
+                    <path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C14.4 14.82 12.3 18.28 11 21z"/>
+                </svg>
+                RUN THREAT ANALYSIS
+            </button>
+        </form>
+
+        {% if result %}
+            <div class="result-box {% if 'Malicious' in result.status or 'Phishing' in result.status %}malicious{% else %}safe{% endif %}">
+                <h3>
+                    {% if 'Malicious' in result.status or 'Phishing' in result.status %}
+                        <svg class="icon" viewBox="0 0 24 24" style="fill: var(--danger-glow);">
+                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                        </svg>
+                        Threat Detected: {{ result.status }}
+                    {% else %}
+                        <svg class="icon" viewBox="0 0 24 24" style="fill: var(--safe-glow);">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        System Secure: {{ result.status }}
+                    {% endif %}
+                </h3>
+                <div class="result-info">
+                    <p><strong>Inspected Target:</strong> <span class="input-preview">{{ result.input }}</span></p>
+                    <p style="margin-top: 10px;">
+                        <strong>Risk Level:</strong> {{ result.risk }} &nbsp;|&nbsp; 
+                        <strong>AI Confidence:</strong> {{ result.confidence }}%
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- View Scan Results Toggle Button -->
+        <button class="history-btn" type="button" data-bs-toggle="collapse" data-bs-target="#historyCollapse" aria-expanded="false" aria-controls="historyCollapse">
+            📊 View Scan History & Results
+        </button>
+
+        <!-- Collapsible History Section -->
+        <div class="collapse" id="historyCollapse">
+            <div class="history-container">
+                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main);">Recent Scan Logs</h4>
+                {% if history %}
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>URL / Input</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in history %}
+                                <tr>
+                                    <td>{{ row[0] }}</td>
+                                    <td>
+                                        {% if 'Malicious' in row[1] or 'Phishing' in row[1] %}
+                                            <span style="color: #ff0055; font-weight: 600;">{{ row[1] }}</span>
+                                        {% else %}
+                                            <span style="color: #00ff87; font-weight: 600;">{{ row[1] }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="color: var(--text-muted); font-size: 11px;">{{ row[2] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin: 10px 0;">No scan history recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
